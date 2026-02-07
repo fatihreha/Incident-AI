@@ -1,0 +1,139 @@
+<div class="h-screen w-screen flex flex-col p-4 md:p-6 overflow-hidden max-w-[1920px] mx-auto relative">
+  
+  <app-toast-container />
+
+  <!-- Top Bar HUD -->
+  <header class="flex-none flex justify-between items-end mb-6 pb-2 border-b border-slate-700/50">
+    <div class="flex items-center gap-4">
+      <!-- Logo Mark -->
+      <div class="w-10 h-10 bg-[#D4F34A] rounded flex items-center justify-center shadow-[0_0_15px_rgba(212,243,74,0.3)]">
+        <i class="fas fa-shield-alt text-xl text-slate-900"></i>
+      </div>
+      
+      <div class="flex flex-col justify-end h-10">
+        <h1 class="text-xl font-bold text-white tracking-tighter uppercase leading-none">
+          Incident<span class="text-[#D4F34A]">.AI</span>
+        </h1>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono border border-slate-700">v2.1</span>
+          <span class="text-[10px] text-slate-500 font-mono tracking-widest font-bold">MULTIMODAL_UNIT</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Status Indicators & Actions -->
+    <div class="flex gap-6 items-center">
+      
+      <!-- History Toggle Button -->
+      <button 
+        (click)="toggleHistory()"
+        [class.text-[#D4F34A]]="showHistory()"
+        [class.bg-slate-800]="showHistory()"
+        [class.border-[#D4F34A]]="showHistory()"
+        [class.text-slate-400]="!showHistory()"
+        [class.border-slate-700]="!showHistory()"
+        class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded border hover:text-[#D4F34A] hover:border-[#D4F34A] transition-all group">
+        <i class="fas fa-history transition-transform group-hover:-rotate-12"></i>
+        <span class="text-xs font-bold uppercase tracking-wider">History</span>
+      </button>
+
+      <div class="hidden lg:flex gap-8 items-center border-l border-slate-700 pl-6">
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] text-slate-500 font-mono uppercase font-bold mb-0.5">System Status</span>
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider">OPERATIONAL</span>
+          </div>
+        </div>
+        <div class="w-[1px] h-8 bg-slate-700"></div>
+        <div class="flex flex-col items-end min-w-[80px]">
+           <span class="text-[10px] text-slate-500 font-mono uppercase font-bold mb-0.5">Latency</span>
+           <span class="text-xs font-bold text-slate-300 tracking-wider flex items-center gap-1 font-mono">
+             <i class="fas fa-network-wired text-[10px] text-slate-500"></i> {{ latency() }}ms
+           </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interface -->
+  <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0 relative z-0">
+    
+    <!-- Left: Input Console -->
+    <div class="h-full min-h-0 flex flex-col transition-all duration-300">
+      <app-log-editor 
+        (analyze)="onAnalyze($event)"
+        class="flex-grow h-full"
+      ></app-log-editor>
+    </div>
+
+    <!-- Right: Data Visualization -->
+    <div class="h-full min-h-0 relative flex flex-col">
+      @if (isLoading()) {
+        <div class="tech-panel h-full flex flex-col items-center justify-center p-8 text-center relative overflow-hidden bg-slate-800">
+          <div class="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==')] opacity-5"></div>
+          
+          <div class="relative z-10">
+            <div class="w-20 h-20 mb-8 border border-slate-700 rounded-full relative flex items-center justify-center bg-slate-900">
+               <div class="absolute inset-0 border-t-2 border-[#D4F34A] rounded-full animate-spin"></div>
+               <i class="fas fa-brain text-3xl text-slate-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2 tracking-tight uppercase">Analyzing Data</h3>
+            <p class="text-slate-400 font-mono text-xs uppercase tracking-widest">Identifying patterns in logs & images...</p>
+          </div>
+        </div>
+      } @else if (error()) {
+        <div class="tech-panel h-full flex flex-col items-center justify-center p-8 text-center border-red-900 bg-red-950/10">
+          <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-6"></i>
+          <h3 class="text-lg font-bold text-red-400 uppercase tracking-widest mb-2">System Failure</h3>
+          <p class="text-red-300 font-mono text-sm max-w-md mb-6">{{ error() }}</p>
+
+          <button 
+            (click)="retryAnalysis()" 
+            class="px-5 py-2.5 bg-red-900/50 hover:bg-red-900 border border-red-700 hover:border-red-500 text-red-200 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 group cursor-pointer">
+            <i class="fas fa-redo transition-transform group-hover:rotate-180"></i> Retry Analysis
+          </button>
+        </div>
+      } @else if (analysisResult()) {
+        <app-analysis-viewer 
+          [data]="analysisResult()!" 
+          [originalLog]="lastAnalyzedLog()"
+          class="h-full block">
+        </app-analysis-viewer>
+      } @else {
+        <!-- Idle State -->
+        <div class="tech-panel h-full flex flex-col items-center justify-center p-8 text-center bg-slate-800/50 border-dashed border-slate-700">
+          <div class="w-24 h-24 border border-slate-700 rounded-full flex items-center justify-center mb-6 relative bg-slate-800">
+            <div class="absolute inset-0 border border-slate-600 rounded-full animate-ping opacity-10"></div>
+            <i class="fas fa-satellite-dish text-3xl text-slate-500"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-300 uppercase tracking-widest mb-2">Awaiting Input</h3>
+          <p class="text-slate-500 font-mono text-xs">Ready for telemetry stream or screenshots</p>
+          <div class="mt-4 text-[10px] text-slate-600">
+            Press <span class="text-[#D4F34A] font-bold">CTRL + ENTER</span> to analyze
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- History Sidebar Slide-over -->
+  @if (showHistory()) {
+    <div 
+      class="fixed inset-y-0 right-0 z-50 animate-in slide-in-from-right duration-300 flex"
+      (click)="$event.stopPropagation()">
+      <app-history-panel 
+        (close)="showHistory.set(false)"
+        (selectItem)="loadHistoryItem($event)"
+      />
+    </div>
+    <!-- Backdrop -->
+    <div 
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in"
+      (click)="showHistory.set(false)">
+    </div>
+  }
+</div>

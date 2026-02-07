@@ -1,0 +1,5 @@
+{
+  "name": "Incident Response AI",
+  "description": "A professional DevOps Incident Response Assistant powered by Gemini 2.5 Flash. It analyzes error logs (Sentry/Datadog style), identifies root causes, and suggests SRE-approved resolution steps in a dashboard environment.",
+  "requestFramePermissions": []
+}
